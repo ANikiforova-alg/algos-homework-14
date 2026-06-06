@@ -13,6 +13,7 @@ import java.util.Objects;
  *   <li>10% скидка для клиентов типа "VIP"</li>
  *   <li>5% скидка для клиентов типа "NEW"</li>
  *   <li>Фиксированная скидка 50₽, если итоговая сумма > 1000₽</li>
+ *   <li>1% скидка, если товаров > 10</li>
  * </ol>
  * <p>
  * Примечание: скидки применяются последовательно, не взаимно исключая друг друга.
@@ -25,6 +26,8 @@ public class OrderService {
     private static final double NEW_DISCOUNT_RATE = 0.95;
     private static final double FIXED_DISCOUNT_THRESHOLD = 1000.0;
     private static final double FIXED_DISCOUNT_AMOUNT = 50.0;
+    private static final double EXTRA_DISCOUNT_THRESHOLD = 10.0;
+    private static final double EXTRA_DISCOUNT_RATE = 0.99; // 1% скидка
 
     /**
      * Рассчитывает итоговую стоимость заказа с учетом типа клиента.
@@ -38,8 +41,8 @@ public class OrderService {
         Objects.requireNonNull(items, "Items list cannot be null");
 
         double subtotal = calculateSubtotal(items);
-        double discountedTotal = applyDiscounts(subtotal, type);
-
+        int totalItemCount = getTotalItemCount(items);
+        double discountedTotal = applyDiscounts(subtotal, type, totalItemCount);
         return discountedTotal;
     }
 
@@ -49,7 +52,7 @@ public class OrderService {
                 .sum();
     }
 
-    private double applyDiscounts(double subtotal, String type) {
+    private double applyDiscounts(double subtotal, String type, int totalItemCount) {
         double total = subtotal;
 
         if ("VIP".equals(type)) {
@@ -64,6 +67,16 @@ public class OrderService {
             total -= FIXED_DISCOUNT_AMOUNT;
         }
 
+        if (totalItemCount > EXTRA_DISCOUNT_THRESHOLD) {
+            total *= EXTRA_DISCOUNT_RATE;
+        }
+
         return total;
+    }
+
+    private int getTotalItemCount(List<Item> items) {
+        return items.stream()
+                .mapToInt(Item::getQuantity)
+                .sum();
     }
 }
