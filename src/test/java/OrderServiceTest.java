@@ -57,4 +57,14 @@ public class OrderServiceTest {
         double result = service.calc(items, "VIP");
         assertEquals(450.0, result); // 500 * 0.9 = 450 — <1000, no fixed discount
     }
+
+        @Test
+    void shouldApplyExtra1PercentDiscountForMoreThan10Items() {
+        List<Item> items = List.of(
+                new Item("Pen", 10.0, 11) // 11 товаров
+        );
+        double result = service.calc(items, "REGULAR");
+        double expected = 110.0 * 0.99; // 110 * 0.99 = 108.9
+        assertEquals(expected, result, 0.001);
+    }
 }
