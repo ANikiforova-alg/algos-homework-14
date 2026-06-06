@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Сервис для расчета итоговой стоимости заказа с учетом скидок.
@@ -20,6 +21,11 @@ import java.util.List;
  */
 public class OrderService {
 
+    private static final double VIP_DISCOUNT_RATE = 0.9;
+    private static final double NEW_DISCOUNT_RATE = 0.95;
+    private static final double FIXED_DISCOUNT_THRESHOLD = 1000.0;
+    private static final double FIXED_DISCOUNT_AMOUNT = 50.0;
+
     /**
      * Рассчитывает итоговую стоимость заказа с учетом типа клиента.
      *
@@ -29,27 +35,35 @@ public class OrderService {
      * @throws IllegalArgumentException если items == null
      */
     public double calc(List<Item> items, String type) {
-        if (items == null) {
-            throw new IllegalArgumentException("Items list cannot be null");
+        Objects.requireNonNull(items, "Items list cannot be null");
+
+        double subtotal = calculateSubtotal(items);
+        double discountedTotal = applyDiscounts(subtotal, type);
+
+        return discountedTotal;
+    }
+
+    private double calculateSubtotal(List<Item> items) {
+        return items.stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+    }
+
+    private double applyDiscounts(double subtotal, String type) {
+        double total = subtotal;
+
+        if ("VIP".equals(type)) {
+            total *= VIP_DISCOUNT_RATE;
         }
 
-        double s = 0;
-        for (Item i : items) {
-            s += i.getPrice() * i.getQuantity();
+        if ("NEW".equals(type)) {
+            total *= NEW_DISCOUNT_RATE;
         }
 
-        if (type.equals("VIP")) {
-            s = s * 0.9;
+        if (total > FIXED_DISCOUNT_THRESHOLD) {
+            total -= FIXED_DISCOUNT_AMOUNT;
         }
 
-        if (type.equals("NEW")) {
-            s = s * 0.95;
-        }
-
-        if (s > 1000) {
-            s = s - 50;
-        }
-
-        return s;
+        return total;
     }
 }
